@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #8152ff;
+  --color-background: #ffffff;
+  --color-text: #000000;
+  --color-link: #ff3131;
+  --color-link-visited: #38b6ff;
+}
+
+@theme {
+  --color-primary: #8152ff;
+  --color-background: #ffffff;
+  --color-foreground: #000000;
+  --color-link: #ff3131;
+  --color-link-visited: #38b6ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100dvh;
+  margin: 0;
+}
+
+a {
+  text-decoration: underline;
+}
+
+a:link {
+  color: var(--color-link);
+}
+
+a:visited {
+  color: var(--color-link-visited);
+}
+
+button,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
