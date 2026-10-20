@@ -11,6 +11,7 @@ export default function Home() {
   const [contractText, setContractText] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
   const { isWaking, runWithWake } = useServerWake();
   const navigate = useNavigate();
 
@@ -63,6 +64,7 @@ export default function Home() {
           value={contractText}
           onChange={setContractText}
           disabled={isSubmitting}
+          onLoadingChange={setIsExtracting}
         />
         <div className="px-5 pb-5 sm:px-6 sm:pb-6">
           <div className="mt-5 space-y-4">
@@ -80,7 +82,7 @@ export default function Home() {
               <Disclaimer />
               <button
                 type="submit"
-                disabled={!contractText.trim() || isSubmitting}
+                disabled={!contractText.trim() || isSubmitting || isExtracting}
                 className="bg-primary px-7 py-3 text-sm font-semibold text-white hover:bg-[#7040f0] disabled:cursor-not-allowed disabled:bg-black/20"
                 data-testid="button-analyze"
               >

@@ -1,6 +1,6 @@
 # ClauseGuard
 
-ClauseGuard is a small portfolio MVP that gives freelancers and remote workers a mock, plain-language review of pasted contract clauses. It is informational only, not legal advice.
+ClauseGuard is a small portfolio MVP that gives freelancers and remote workers a mock, plain-language review of pasted contract clauses or text extracted from uploaded files. It is informational only, not legal advice.
 
 ## Stack
 
@@ -21,6 +21,8 @@ cp .env.example .env
 ```
 
 Open <http://localhost:5173>. The API health check is at <http://localhost:8080/api/health>. The app runs without `.env` or MongoDB; reports are then kept in memory until the API stops.
+
+You can upload `.txt`, `.docx`, or `.pdf` files up to 5 MB. Extracted text appears in the editor for review before analysis. Scanned/image-only PDFs are not supported. Files are processed in memory and are not stored.
 
 ## Environment
 

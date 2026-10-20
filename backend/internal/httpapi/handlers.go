@@ -116,10 +116,6 @@ func (h *Handlers) chat(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, response)
 }
 
-func (h *Handlers) extract(w http.ResponseWriter, _ *http.Request) {
-	writeError(w, http.StatusNotImplemented, "File extraction is not implemented yet.")
-}
-
 func decodeJSON(w http.ResponseWriter, r *http.Request, destination any) error {
 	r.Body = http.MaxBytesReader(w, r.Body, maxRequestBytes)
 	decoder := json.NewDecoder(r.Body)

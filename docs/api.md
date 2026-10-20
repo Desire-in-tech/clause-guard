@@ -1,6 +1,6 @@
 # ClauseGuard API
 
-The API listens on port `8080` by default. JSON errors use the form `{"error":"message"}`. Requests are limited to 1 MiB; `contract_text` is limited to 100,000 characters. No authentication is used in this portfolio MVP.
+The API listens on port `8080` by default. JSON errors use the form `{"error":"message"}`. JSON requests are limited to 1 MiB; uploads are limited to 5 MB; contract and extracted text are limited to 100,000 characters. No authentication is used in this portfolio MVP.
 
 ## `GET /api/health`
 
@@ -78,11 +78,25 @@ History roles are `user` and `assistant`. Response:
 
 ## `POST /api/extract`
 
-File parsing is out of scope for this step. Returns `501`:
+Upload one file as multipart form data in the `file` field. Supported extensions are `.txt`, `.docx`, and `.pdf`; PDF and DOCX contents are checked against their file signatures. DOCX extraction reads `word/document.xml` and limits decompressed XML to 5 MB. PDF extraction reads selectable text only and does not use OCR.
+
+Successful response:
 
 ```json
-{ "error": "File extraction is not implemented yet." }
+{
+  "text": "Payment is due within 30 days.",
+  "filename": "agreement.txt",
+  "characters": 30
+}
 ```
+
+Unsupported extensions return `415`; malformed, empty, unreadable, or overlong extracted text returns a JSON error. Uploads over 5 MB return `413`. Scanned or image-only PDFs return:
+
+```json
+{ "error": "No selectable text found. Scanned PDFs are not supported yet." }
+```
+
+Uploaded files are processed in memory and are not stored.
 
 ## CORS and storage
 

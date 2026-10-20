@@ -53,3 +53,9 @@ export interface ChatResponse {
 export interface APIError {
   error: string;
 }
+
+export interface ExtractResponse {
+  text: string;
+  filename: string;
+  characters: number;
+}

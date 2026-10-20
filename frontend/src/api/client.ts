@@ -3,17 +3,20 @@ import type {
   APIError,
   ChatRequest,
   ChatResponse,
+  ExtractResponse,
 } from "./types";
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "");
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = new Headers(init?.headers);
+  if (!(init?.body instanceof FormData) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
+    headers,
   });
 
   const data = (await response.json().catch(() => null)) as
@@ -60,6 +63,11 @@ export function chatAboutContract(
   });
 }
 
-export function extractFile(): Promise<never> {
-  return request<never>("/extract", { method: "POST" });
+export function extractFile(file: File): Promise<ExtractResponse> {
+  const body = new FormData();
+  body.append("file", file);
+  return request<ExtractResponse>("/extract", {
+    method: "POST",
+    body,
+  });
 }

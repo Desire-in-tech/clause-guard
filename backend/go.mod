@@ -4,6 +4,7 @@ go 1.26.0
 
 require (
 	github.com/go-chi/chi/v5 v5.5.0
+	github.com/ledongthuc/pdf v0.0.0-20261020125853-5e46805f718e
 	go.mongodb.org/mongo-driver/v2 v2.9.2
 )
 
