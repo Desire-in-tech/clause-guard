@@ -37,12 +37,14 @@ export default function ClauseCard({ clause }: ClauseCardProps) {
           </h4>
           <p className="text-sm leading-6 text-black">{clause.reason}</p>
         </div>
-        <div className="border-l-2 border-primary bg-[#f8f6ff] px-4 py-3">
-          <h4 className="mb-1 text-xs font-bold uppercase tracking-[0.12em] text-black/55">
-            Possible rewrite
-          </h4>
-          <p className="text-sm leading-6 text-black">{clause.suggested_rewrite}</p>
-        </div>
+        {clause.suggested_rewrite && (
+          <div className="border-l-2 border-primary bg-[#f8f6ff] px-4 py-3">
+            <h4 className="mb-1 text-xs font-bold uppercase tracking-[0.12em] text-black/55">
+              Possible rewrite
+            </h4>
+            <p className="text-sm leading-6 text-black">{clause.suggested_rewrite}</p>
+          </div>
+        )}
       </div>
     </article>
   );
