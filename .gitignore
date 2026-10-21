@@ -75,3 +75,4 @@ target/
 .turbo/
 .next/
 .output/
+attached_assets/
