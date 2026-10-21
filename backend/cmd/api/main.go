@@ -31,7 +31,7 @@ func main() {
 	case "mock":
 		aiClient = llm.NewMockClient()
 	case "openrouter":
-		aiClient = llm.NewOpenRouterClient()
+		aiClient = llm.NewOpenRouterClient(cfg)
 	}
 
 	var reportStore store.Store
@@ -58,7 +58,7 @@ func main() {
 		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
-		WriteTimeout:      30 * time.Second,
+		WriteTimeout:      110 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
 

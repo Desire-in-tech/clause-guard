@@ -210,6 +210,9 @@ export default function Results() {
             >
               {report.summary}
             </p>
+            <p className="mt-3 text-xs leading-5 text-black/55">
+              AI-generated analysis can be wrong. Information only, not legal advice.
+            </p>
           </div>
           <div className="flex shrink-0 flex-col gap-2">
             <span className="text-xs font-bold uppercase tracking-[0.12em] text-black/55">

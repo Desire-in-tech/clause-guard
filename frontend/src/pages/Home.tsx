@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { analyzeContract } from "../api/client";
+import { APIRequestError, analyzeContract } from "../api/client";
 import type { AnalysisReport } from "../api/types";
 import Disclaimer from "../components/Disclaimer";
 import ServerWakeBanner from "../components/ServerWakeBanner";
@@ -30,11 +30,23 @@ export default function Home() {
         navigate("/results", { state: { report } });
       }
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "The contract could not be analyzed. Please try again.",
-      );
+      if (requestError instanceof APIRequestError && requestError.status === 502) {
+        setError("AI analysis is temporarily unavailable. Please try again later.");
+      } else if (
+        requestError instanceof APIRequestError &&
+        requestError.status === 429
+      ) {
+        setError(
+          requestError.message ||
+            "The demo AI limit has been reached. Please try again later.",
+        );
+      } else {
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "The contract could not be analyzed. Please try again.",
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -79,14 +91,22 @@ export default function Home() {
               </p>
             )}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <Disclaimer />
+              <div>
+                <Disclaimer />
+                <p className="mt-2 max-w-md text-xs leading-5 text-black/55">
+                  Demo uses free third-party AI models. Do not paste confidential
+                  or personal information.
+                </p>
+              </div>
               <button
                 type="submit"
                 disabled={!contractText.trim() || isSubmitting || isExtracting}
                 className="bg-primary px-7 py-3 text-sm font-semibold text-white hover:bg-[#7040f0] disabled:cursor-not-allowed disabled:bg-black/20"
                 data-testid="button-analyze"
               >
-                {isSubmitting ? "Analyzing…" : "Analyze"}
+                {isSubmitting
+                  ? "Analyzing... this can take up to a minute"
+                  : "Analyze"}
               </button>
             </div>
           </div>

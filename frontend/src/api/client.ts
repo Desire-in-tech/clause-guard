@@ -8,6 +8,16 @@ import type {
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "");
 
+export class APIRequestError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "APIRequestError";
+    this.status = status;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   if (!(init?.body instanceof FormData) && !headers.has("Content-Type")) {
@@ -33,7 +43,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       apiError
         ? apiError.error
         : `Request failed with status ${response.status}.`;
-    throw new Error(message);
+    throw new APIRequestError(message, response.status);
   }
 
   if (data === null) {

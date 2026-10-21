@@ -25,7 +25,14 @@ func NewRouter(
 		chatService: chatService,
 		reports:     reportStore,
 		llmProvider: cfg.LLMProvider,
+		maxClauses:  cfg.MaxClauses,
 		logger:      logger,
+	}
+	if handler.maxClauses <= 0 {
+		handler.maxClauses = 40
+	}
+	if cfg.LLMProvider == "openrouter" {
+		handler.limits = newRequestLimiter(cfg.DailyBudget, cfg.RateLimitPerHour)
 	}
 
 	router.Use(cors(cfg.FrontendOrigin))

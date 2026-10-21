@@ -7,10 +7,13 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"clauseguard/backend/internal/analysis"
 	"clauseguard/backend/internal/chat"
+	"clauseguard/backend/internal/contracts"
+	"clauseguard/backend/internal/llm"
 	"clauseguard/backend/internal/store"
 	"github.com/go-chi/chi/v5"
 )
@@ -25,6 +28,8 @@ type Handlers struct {
 	chatService *chat.Service
 	reports     store.Store
 	llmProvider string
+	maxClauses  int
+	limits      *requestLimiter
 	logger      *slog.Logger
 }
 
@@ -59,11 +64,28 @@ func (h *Handlers) analyze(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "contract_text must not be empty.")
 		return
 	}
+	clauses := contracts.Split(request.ContractText)
+	if len(clauses) == 0 {
+		writeError(w, http.StatusBadRequest, "contract_text must contain at least one clause.")
+		return
+	}
+	if len(clauses) > h.maxClauses {
+		writeError(w, http.StatusBadRequest, (&llm.TooManyClausesError{Max: h.maxClauses}).Error())
+		return
+	}
+	if h.llmProvider == "openrouter" {
+		if !h.allowAIRequest(w, r) {
+			return
+		}
+	}
 
 	report, err := h.analysis.Analyze(r.Context(), request.ContractText)
 	if err != nil {
 		if errors.Is(err, analysis.ErrEmptyContract) {
 			writeError(w, http.StatusBadRequest, "contract_text must contain at least one clause.")
+			return
+		}
+		if h.writeLLMError(w, err) {
 			return
 		}
 		h.logger.Error("analyze contract", "error", err)
@@ -107,13 +129,62 @@ func (h *Handlers) chat(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "question must not be empty.")
 		return
 	}
+	if utf8.RuneCountInString(request.Question) > 1000 {
+		writeError(w, http.StatusBadRequest, "question must not exceed 1,000 characters.")
+		return
+	}
+	if h.llmProvider == "openrouter" {
+		if !h.allowAIRequest(w, r) {
+			return
+		}
+	}
 	response, err := h.chatService.Ask(r.Context(), request)
 	if err != nil {
+		if h.writeLLMError(w, err) {
+			return
+		}
 		h.logger.Error("answer contract question", "error", err)
 		writeError(w, http.StatusInternalServerError, "Could not answer this question.")
 		return
 	}
 	writeJSON(w, http.StatusOK, response)
+}
+
+func (h *Handlers) allowAIRequest(w http.ResponseWriter, r *http.Request) bool {
+	if h.limits == nil {
+		return true
+	}
+	switch h.limits.allow(clientIP(r), time.Now().UTC()) {
+	case limitDailyBudget:
+		writeError(w, http.StatusTooManyRequests, "Demo limit reached for today. Please try again tomorrow.")
+		return false
+	case limitHourlyIP:
+		writeError(w, http.StatusTooManyRequests, "You’ve reached the demo’s AI request limit. Please try again in an hour.")
+		return false
+	default:
+		return true
+	}
+}
+
+func (h *Handlers) writeLLMError(w http.ResponseWriter, err error) bool {
+	if errors.Is(err, llm.ErrProviderRateLimited) {
+		writeError(w, http.StatusTooManyRequests, "The AI service is busy right now. Please try again shortly.")
+		return true
+	}
+	if errors.Is(err, llm.ErrProviderUnavailable) {
+		writeError(w, http.StatusBadGateway, "AI analysis is temporarily unavailable. Please try again later.")
+		return true
+	}
+	if errors.Is(err, llm.ErrQuestionTooLong) {
+		writeError(w, http.StatusBadRequest, "question must not exceed 1,000 characters.")
+		return true
+	}
+	var tooManyClauses *llm.TooManyClausesError
+	if errors.As(err, &tooManyClauses) {
+		writeError(w, http.StatusBadRequest, tooManyClauses.Error())
+		return true
+	}
+	return false
 }
 
 func decodeJSON(w http.ResponseWriter, r *http.Request, destination any) error {
